@@ -11,6 +11,9 @@ class Word:
     def getWord(self):
         return self._s
 
+    def getType(self):
+        return self.__class__.__name__
+
 class FeatureWord(Word):
     _f = None
 
@@ -24,18 +27,50 @@ class FeatureWord(Word):
     def setFeatures(self, f):
         raise NotImplementedError()
 
+    class InvalidFeature(Exception):
+        pass
+
 class A(Word):
     pass
 
-class A(Word):
+class Adv(Word):
     pass
 
 class C(FeatureWord):
     def setFeatures(self, f):
         try:
-            if f in ["[+Q]", "[+Q][+wh]", "[+wh]"]:
+            if f in ["[+Q]", "[+Q][+wh]", "[+wh]", "[+TOP]", None]:
                 self._f = f
-            else:
-                
-                
-    
+        except:
+            raise self.InvalidFeature("Invalid feature string for "
+                                      "complementizer: " + f)
+        
+class D(FeatureWord):
+    def setFeatures(self, f):
+        try:
+            if f in ["[+wh]", None]:
+                self._f = f
+        except:
+            raise self.InvalidFeature("Invalid feature string for"
+                                      "determiner: " + f)
+
+class N(Word):
+    pass
+
+class Neg(Word):
+    pass
+
+class P(Word):
+    pass
+
+class T(FeatureWord):
+    def setFeatures(self, f):
+        try:
+            if f in ["[-tense]", "[+past]", "[+future]", None]:
+                self._f = f
+        except:
+            raise self.InvalidFeature("Invalid feature string for "
+                                      "tense word: " + f)
+
+class V(Word):
+    pass
