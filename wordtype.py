@@ -1,12 +1,6 @@
-#--------------------------------------------------------------------#
-#                                                                    #
-# wordtype.py                                                        #
-#                                                                    #
-# Define parts of speech possible for a word.                        #
-#                                                                    #
-#--------------------------------------------------------------------#
-
-# >>> Word datatypes (parts of speech for single words)
+# wordtype.py
+#
+# Define parts of speech possible for a word.
 
 class Word:
     _s = None
@@ -23,7 +17,7 @@ class Word:
 class FeatureWord(Word):
     _f = None
 
-    def __init__(self, s, f = None):
+    def __init__(self, s, f):
         self._s = s
         self._f = f
     
@@ -72,7 +66,7 @@ class P(Word):
 class T(FeatureWord):
     def setFeatures(self, f):
         try:
-            if f in ["[-tense]", "[+pres]", "[-pres", "[+future]", None]:
+            if f in ["[-tense]", "[+past]", "[+future]", None]:
                 self._f = f
         except:
             raise self.InvalidFeature("Invalid feature string for "
@@ -80,24 +74,3 @@ class T(FeatureWord):
 
 class V(Word):
     pass
-
-# Special wordtypes for cases of null words and traces
-class Null(Word):
-    def __init__(self):
-        self._s = '\u2205'
-
-class Trace(Word):
-    def __init__(self):
-        self._s = 't'
-        
-# >>> Phrase datatypes (phrase structure rules)
-class Phrase(Word):
-    _c1 = None
-    _c2 = None
-    _c3 = None
-    
-    def __init__(self, c1, c2 = None, c3 = None):
-        pass
-
-class AP(Phrase):
-    def __init__(self, c1, c2 = None, c3 = None):
