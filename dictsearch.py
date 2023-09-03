@@ -14,6 +14,10 @@ class DictSearch:
     to determine whether a page exists for the search term. If so,
     copy the HTML data of the page for that term, and parse it to
     extract parts of speech, definitions, etc."""
+
+    POSList = [ "Adjective", "Adverb", "Article", "Conjunction",
+                "Determiner", "Pronoun", "Proper noun", "Noun",
+                "Preposition", "Auxiliary", "Verb" ]
     
     def __init__(self, word):
         # "Public" data members
@@ -24,9 +28,6 @@ class DictSearch:
         self.verbInflections = set()
 
         # "Private" data members
-        self._POS = [ "Adjective", "Adverb", "Article", "Conjunction",
-                      "Determiner", "Pronoun", "Proper noun", "Noun",
-                      "Preposition", "Auxiliary", "Verb" ]
         self._soup = None
         self._html = None # hold HTML data of body of page
 
@@ -86,11 +87,29 @@ class DictSearch:
         # occurs in "h2" tags
         while treeptr and treeptr.parent.name != "h2":
             if etym_regex.match(treeptr.string):
-                entry += treeptr.string + "\n\n"
-                # <p> tags contain the etymology deets
-                treeptr = treeptr.find_next("p")
-                entry += treeptr.get_text() + '\n'
-            elif treeptr.string in self._POS:
+                if (entry != "" and len(entry) >= 2 and
+                    entry[len(entry)-2:] != "\n\n"):
+                    if entry[len(entry)-1] == '\n':
+                        entry += '\n'
+                    else:
+                        entry += "\n\n"
+                entry += treeptr.string + "\n"
+                # <p> tags contain the etymology deets, but a gloss
+                # isn't guaranteed to occur; check if the next <p> is
+                # occurs before or after the next tag with class
+                # "mw-headline"
+                nexthead = treeptr.find_next(class_="mw-headline")
+                if (treeptr.find_next("p") not in
+                    nexthead.next_elements):
+                    treeptr = treeptr.find_next("p")
+                    entry += treeptr.get_text()
+            elif treeptr.string in DictSearch.POSList:
+                if (entry != "" and len(entry) >= 2 and
+                    entry[len(entry)-2:] != "\n\n"):
+                    if entry[len(entry)-1] == '\n':
+                        entry += '\n'
+                    else:
+                        entry += "\n\n"
                 self.POS.add(treeptr.string)
                 entry += treeptr.string + '\n'
                 # Handle verbs seperately, comb definitions for
@@ -125,6 +144,12 @@ class DictSearch:
                 while olptr:
                     if olptr.ol: # if there's a nested definition
                         innerptr = olptr.ol.extract()
+                    # Wiktionary's formatting is inconsistent enough
+                    # where I need to make sure <li> tags get a
+                    # newspace in between them if one wasn't already
+                    # written
+                    if entry != "" and entry[len(entry)-1] != '\n':
+                        entry += '\n'
                     text = str(liCount) + '. ' + olptr.get_text()
                     if text[len(text)-2:] == "\n\n":
                         text = text[:len(text)-1]
@@ -144,6 +169,9 @@ class DictSearch:
                     if innerptr:
                         innerptr = innerptr.li
                         while innerptr:
+                            if (entry != "" and
+                                entry[len(entry)-1] != '\n'):
+                                entry += '\n'
                             text = ('\t' + str(nestedCount) + '. '
                                     + innerptr.get_text())
                             if text[len(text)-2:] == "\n\n":
@@ -167,12 +195,11 @@ class DictSearch:
                                         "present")
                             nestedCount += 1
                             innerptr = innerptr.find_next("li")
-                        entry += '\n'
                         nestedCount = 1
                         innerptr= None
                     liCount += 1
                     olptr = olptr.find_next("li")
-                entry += '\n'
+                #entry += '\n'
             # tag with class "mw-headline" that doesn't correspond
             # with etymology or definitions
             else:
