@@ -6,6 +6,11 @@ import re
 from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 
+class PageNotFound(Exception):
+    pass
+class NoEnglishEntry(Exception):
+    pass
+
 class DictSearch:
     """Given a search term, fetch JSON output from the MediaWiki API
     to determine whether a page exists for the search term. If so,
@@ -16,8 +21,8 @@ class DictSearch:
         # "Public" data members
         self.word = word
         self.entry = "" # hold dictionary entry
-        self.html = None # hold HTML data of body of page        
-        self.POS = [] # hold parts of speech of word
+        self.html = None # hold HTML data of body of page
+        self.POS = set() # hold parts of speech of word
         # Should stay None unless self.POS contains "Verb"
         self.verbInflections = None
 
@@ -25,7 +30,7 @@ class DictSearch:
         self._POS = [ "Adjective", "Adverb", "Article", "Conjunction",
                       "Determiner", "Pronoun", "Proper noun", "Noun",
                       "Preposition", "Auxiliary", "Verb" ]
-        self._soup = None # keep the BeautifulSoup object "hidden"
+        self._soup = None
 
         if not isinstance(word, str):
             raise TypeError("Search term must be of type str")
@@ -47,7 +52,7 @@ class DictSearch:
         raw = json.load(urllib.request.urlopen(URL))
         # If page does not exist
         if "error" in raw:
-            raise LookupError("The page you specified ('" + word +
+            raise PageNotFound("The page you specified ('" + word +
                               "') doesn't exist")
         self.html = raw["parse"]["text"]["*"]
 
@@ -55,8 +60,8 @@ class DictSearch:
         soup = self._soup
         treeptr = soup.find(id="English")
         if not treeptr:
-            raise LookupError("English entry does not exist for '" +
-                              word + "'")
+            raise NoEnglishEntry("English entry does not exist for '"
+                                 + self.word + "'")
         
         # Strip the HTML of the [quotations] and [synonyms] toggle
         # boxes, [edit] buttons, reference links, NavFrames (tables or
@@ -82,15 +87,13 @@ class DictSearch:
         # enter a section for a different language, which always
         # occurs in "h2" tags
         while treeptr and treeptr.parent.name != "h2":
-            # treeptr jumped to a <span> tag with class "mw-headline"
-            # that delineates a section for etymology
             if etym_regex.match(treeptr.string):
                 entry += treeptr.string + "\n\n"
                 # <p> tags contain the etymology deets
                 treeptr = treeptr.find_next("p")
                 entry += treeptr.get_text() + '\n'
-            # treeptr jumped to a tag that delineates part of speech
             elif treeptr.string in self._POS:
+                self.POS.add(treeptr.string)
                 entry += treeptr.string + '\n'
                 # Handle verbs seperately, comb definitions for
                 # mentions of being auxiliaries
@@ -151,11 +154,13 @@ class DictSearch:
                 pass
             treeptr = treeptr.find_next(class_="mw-headline")
         self.entry = entry
+
+# TO-DO: Remove this code block once the project is done
 def test():
-    test = DictSearch("would")
+    test = DictSearch("sex")
     import io
     from contextlib import redirect_stdout
-    f = open("test", 'r+')
+    f = open("test", 'w+')
     with io.StringIO() as buf, redirect_stdout(buf):
         print(test.entry)
         output = buf.getvalue()
