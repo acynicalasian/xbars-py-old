@@ -21,11 +21,13 @@ The class constructor automatically does the scraping in the background, so the 
 Searches for `word` on Wiktionary, scrapes the data if an English entry exists, and stores a dictionary entry and part of speech and verb inflection data.
 * If a page for `word` does not exist on Wiktionary, a `PageNotFound` exception is raised.
 * If a page for `word` exists, but an English entry for it does not exist, a `NoEnglishEntry` exception is raised.
-##### .word
-* `str` that holds the `word` used to initialize this instance.
-##### .entry
-* `str` that holds the dictionary entry on Wiktionary for the word.
-##### .POS
-* `set` that holds the parts of speech associated with `word` in English.
-##### .verbInflections
-* `set` that holds any verb inflections associated with `word` in English.
+##### `DictSearch.POSList`
+* `set` class attribute that holds the parts of speech recognized by the program. Any code implementing this library should ideally aim to conform to the list of parts of speech given in this class attribute.
+##### `.word`
+* `str` instance variable that holds the `word` used to initialize this instance.
+##### `.entry`
+* `str` instance variable that holds the dictionary entry on Wiktionary for the word.
+##### `.POS`
+* `set` instance variable that holds the parts of speech associated with `word` in English.
+##### `.verbInflections`
+* `set` instance variable that holds any verb inflections associated with `word` in English.
