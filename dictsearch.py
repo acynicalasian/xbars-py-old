@@ -2,6 +2,7 @@ import urllib.request
 import urllib.parse
 import json
 import copy
+import re
 from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 
@@ -14,20 +15,11 @@ class DictSearch:
     def __init__(self, word):
         # "Public" data members
         self.word = word
-        self.entry = {
-            "Adjective" : None,
-            "Adverb" : None,
-            "Article" : None,
-            "Conjunction" : None,
-            "Determiner" : None,
-            "Pronoun" : None,
-            "Proper noun" : None,
-            "Noun" : None,
-            "Preposition" : None,
-            "Verb" : None
-            }
+        self.entry = "" # hold dictionary entry
         self.html = None # hold HTML data of body of page        
-        self.POS = None # hold parts of speech of word
+        self.POS = [] # hold parts of speech of word
+        # Should stay None unless self.POS contains "Verb"
+        self.verbInflections = None
 
         # "Private" data members
         self._POS = [ "Adjective", "Adverb", "Article", "Conjunction",
@@ -68,10 +60,10 @@ class DictSearch:
         
         # Strip the HTML of the [quotations] and [synonyms] toggle
         # boxes, [edit] buttons, reference links, NavFrames (tables or
-        # something)
-        
+        # something), and empty <li> tags (for later in extracting
+        # definitions)
         for classid in ["nyms-toggle", "HQToggle", "mw-editsection",
-                        "reference", "NavFrame"]:
+                        "reference", "NavFrame", "mw-empty-elt"]:
             for tag in soup.find_all(class_=classid):
                 tag.decompose()
 
@@ -81,58 +73,85 @@ class DictSearch:
             for tag in soup.find_all(tagid):
                 tag.decompose()
 
-        # Parts of speech occur in tags with class "mw-headline"
+        # Section headers for etymology and part of speech all occur
+        # in tags with class "mw-headline"
         treeptr = treeptr.find_next(class_="mw-headline")
+        etym_regex = re.compile("Etymology")
+        entry = ""
+        # First condition exits if treeptr is None, second exits if we
+        # enter a section for a different language, which always
+        # occurs in "h2" tags
         while treeptr and treeptr.parent.name != "h2":
-            if treeptr.string in self._POS:
-                currentPOS = treeptr.string
-                # <p> tags contain the gloss, which has useful
-                # information; extract this
-                glossptr = treeptr.find_next("p").extract()
-                gloss = ""
-                while glossptr:
-                    if isinstance(glossptr, str):
-                        gloss += glossptr
-                    glossptr = glossptr.next
-                # <ol> tags contain the definitions
+            # treeptr jumped to a <span> tag with class "mw-headline"
+            # that delineates a section for etymology
+            if etym_regex.match(treeptr.string):
+                entry += treeptr.string + "\n\n"
+                # <p> tags contain the etymology deets
+                treeptr = treeptr.find_next("p")
+                entry += treeptr.get_text() + '\n'
+            # treeptr jumped to a tag that delineates part of speech
+            elif treeptr.string in self._POS:
+                entry += treeptr.string + '\n'
+                # Handle verbs seperately, comb definitions for
+                # mentions of being auxiliaries
+                verbFlag = False
+                if treeptr.string == "Verb":
+                    verbFlag = True
+                    aux_regex = re.compile("auxiliary")
+                    modal_regex = re.compile("modal")
+                    # Verbs only inflect for past or present in
+                    # English as far as I'm aware
+                    past_regex = re.compile("simple past")
+                    perf_regex = re.compile("past participle")
+                    # Assume verbs are present tense by default, and
+                    # use "simple present" as the regex to search
+                    # against because "present" will fail for any
+                    # dictionary entries for the verb "present";
+                    # "simple present" better catches verb inflection
+                    # for 3P-present, and I'm not aware of any
+                    # irregular forms for this
+                    pres_regex = re.compile("simple present")
+                # Extract the gloss
+                treeptr = treeptr.find_next("p")
+                entry += treeptr.get_text() + '\n'
+                # Extract the section containing definitions
                 olptr = treeptr.find_next("ol").extract()
-                entry = ""
-                # liCount = 1
-                # olptr = olptr.next
-                # while olptr:
-                #     if isinstance(olptr, str):
-                #         entry += olptr
-                #     else:
-                #         if olptr.name == "li":
-                #             entry += str(liCount)
-                #             liCount += 1
-                #         elif olptr.name == "ol":
-                #             # Handle nested definitions
-                #             olptr_cp = copy.copy(olptr)
-                #             olptr = olptr.parent.next_sibling
-                #             nestedCount = 1
-                #             while olptr_cp:
-                #                 if isinstance(olptr_cp, str):
-                #                     entry += olptr_cp
-                #                 else:
-                #                     if olptr.name == "li":
-                #                         entry += '\t' + str(nestedCount)
-                #             nestedCount = 1
-                entry = olptr.get_text()
-                # After processing the <ol> tag, add the definitions
-                # to self.entry
-                self.entry[currentPOS] = entry
-                treeptr = treeptr.find_next(class_="mw-headline")
+                olptr = olptr.li
+                liCount = 1
+                nestedCount = 1
+                innerptr = None
+                # TO-DO: support searching verb definitions to extract
+                # tense/modality data
+                while olptr:
+                    # if nested definitions
+                    if olptr.ol:
+                        innerptr = olptr.ol.extract()
+                    entry += str(liCount) + '. ' + olptr.get_text()
+                    if innerptr:
+                        innerptr = innerptr.li
+                        while innerptr:
+                            entry += ('\t' + str(nestedCount) + '. '
+                                      + innerptr.get_text())
+                            nestedCount += 1
+                            innerptr = innerptr.find_next("li")
+                        entry += '\n'
+                        nestedCount = 1
+                        innerptr = None
+                    liCount += 1
+                    olptr = olptr.find_next("li")
+                entry += '\n'
+            # tag with class "mw-headline" that doesn't correspond
+            # with etymology or definitions
             else:
-                treeptr = treeptr.find_next(class_="mw-headline")
-                
+                pass
+            treeptr = treeptr.find_next(class_="mw-headline")
+        self.entry = entry
 def test():
-    test = DictSearch("sex")
+    test = DictSearch("would")
     import io
     from contextlib import redirect_stdout
-    f = open("testoutput", 'r+')
+    f = open("test", 'r+')
     with io.StringIO() as buf, redirect_stdout(buf):
         print(test.entry)
         output = buf.getvalue()
         f.write(output)
-        
