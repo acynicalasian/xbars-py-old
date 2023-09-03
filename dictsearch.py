@@ -179,18 +179,3 @@ class DictSearch:
                 pass
             treeptr = treeptr.find_next(class_="mw-headline")
         self.entry = entry
-
-# TO-DO: Remove this code block once the project is done
-def test():
-    test = DictSearch("had")
-    import io
-    from contextlib import redirect_stdout
-    f = open("test", "w+")
-    with io.StringIO() as buf, redirect_stdout(buf):
-        print(test.entry)
-        print('\n')
-        print("Verb inflections of " + test.word + ": ")
-        for i in test.verbInflections:
-            print(i)
-        output = buf.getvalue()
-        f.write(output)
