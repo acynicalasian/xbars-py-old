@@ -1,9 +1,7 @@
 import urllib.request
 import urllib.parse
 import json
-import copy
 import re
-from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 
 class PageNotFound(Exception):
@@ -21,23 +19,23 @@ class DictSearch:
         # "Public" data members
         self.word = word
         self.entry = "" # hold dictionary entry
-        self.html = None # hold HTML data of body of page
         self.POS = set() # hold parts of speech of word
-        # Should stay None unless self.POS contains "Verb"
-        self.verbInflections = None
+        # Should stay empty unless self.POS contains "Verb"
+        self.verbInflections = set()
 
         # "Private" data members
         self._POS = [ "Adjective", "Adverb", "Article", "Conjunction",
                       "Determiner", "Pronoun", "Proper noun", "Noun",
                       "Preposition", "Auxiliary", "Verb" ]
         self._soup = None
+        self._html = None # hold HTML data of body of page
 
         if not isinstance(word, str):
             raise TypeError("Search term must be of type str")
-        self._copypage(word) # instantiate self.html
+        self._copypage(word) # instantiate self._html
 
         # Only runs if page exists
-        self._soup = BeautifulSoup(self.html, "html.parser")
+        self._soup = BeautifulSoup(self._html, "html.parser")
         self._parsepage()
         
     def _copypage(self, word):
@@ -54,7 +52,7 @@ class DictSearch:
         if "error" in raw:
             raise PageNotFound("The page you specified ('" + word +
                               "') doesn't exist")
-        self.html = raw["parse"]["text"]["*"]
+        self._html = raw["parse"]["text"]["*"]
 
     def _parsepage(self):
         soup = self._soup
@@ -105,6 +103,7 @@ class DictSearch:
                     # Verbs only inflect for past or present in
                     # English as far as I'm aware
                     past_regex = re.compile("simple past")
+                    past2_regex = re.compile("ast tense of")
                     perf_regex = re.compile("past participle")
                     # Assume verbs are present tense by default, and
                     # use "simple present" as the regex to search
@@ -123,8 +122,6 @@ class DictSearch:
                 liCount = 1
                 nestedCount = 1
                 innerptr = None
-                # TO-DO: support searching verb definitions to extract
-                # tense/modality data
                 while olptr:
                     if olptr.ol: # if there's a nested definition
                         innerptr = olptr.ol.extract()
@@ -132,6 +129,18 @@ class DictSearch:
                     if text[len(text)-2:] == "\n\n":
                         text = text[:len(text)-1]
                     entry += text
+                    if verbFlag:
+                        if aux_regex.search(text):
+                            self.verbInflections.add("auxiliary")
+                        elif modal_regex.search(text):
+                            self.verbInflections.add("auxiliary")
+                        elif (past_regex.search(text) or
+                              past2_regex.search(text)):
+                            self.verbInflections.add("past")
+                        elif perf_regex.search(text):
+                            self.verbInflections.add("perfect")
+                        elif pres_regex.search(text):
+                            self.verbInflections.add("present")
                     if innerptr:
                         innerptr = innerptr.li
                         while innerptr:
@@ -140,6 +149,22 @@ class DictSearch:
                             if text[len(text)-2:] == "\n\n":
                                 text = text[:len(text)-1]
                             entry += text
+                            if verbFlag:
+                                if aux_regex.search(text):
+                                    self.verbInflections.add(
+                                        "auxiliary")
+                                elif modal_regex.search(text):
+                                    self.verbInflections.add(
+                                        "auxiliary")
+                                elif (past_regex.search(text) or
+                                      past2_regex.search(text)):
+                                    self.verbInflections.add("past")
+                                elif perf_regex.search(text):
+                                    self.verbInflections.add(
+                                        "perfect")
+                                elif pres_regex.search(text):
+                                    self.verbInflections.add(
+                                        "present")
                             nestedCount += 1
                             innerptr = innerptr.find_next("li")
                         entry += '\n'
@@ -157,11 +182,15 @@ class DictSearch:
 
 # TO-DO: Remove this code block once the project is done
 def test():
-    test = DictSearch("sex")
+    test = DictSearch("had")
     import io
     from contextlib import redirect_stdout
-    f = open("test", 'w+')
+    f = open("test", "w+")
     with io.StringIO() as buf, redirect_stdout(buf):
         print(test.entry)
+        print('\n')
+        print("Verb inflections of " + test.word + ": ")
+        for i in test.verbInflections:
+            print(i)
         output = buf.getvalue()
         f.write(output)
