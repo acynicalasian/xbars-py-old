@@ -123,20 +123,25 @@ class DictSearch:
                 # TO-DO: support searching verb definitions to extract
                 # tense/modality data
                 while olptr:
-                    # if nested definitions
-                    if olptr.ol:
+                    if olptr.ol: # if there's a nested definition
                         innerptr = olptr.ol.extract()
-                    entry += str(liCount) + '. ' + olptr.get_text()
+                    text = str(liCount) + '. ' + olptr.get_text()
+                    if text[len(text)-2:] == "\n\n":
+                        text = text[:len(text)-1]
+                    entry += text
                     if innerptr:
                         innerptr = innerptr.li
                         while innerptr:
-                            entry += ('\t' + str(nestedCount) + '. '
-                                      + innerptr.get_text())
+                            text = ('\t' + str(nestedCount) + '. '
+                                    + innerptr.get_text())
+                            if text[len(text)-2:] == "\n\n":
+                                text = text[:len(text)-1]
+                            entry += text
                             nestedCount += 1
                             innerptr = innerptr.find_next("li")
                         entry += '\n'
                         nestedCount = 1
-                        innerptr = None
+                        innerptr= None
                     liCount += 1
                     olptr = olptr.find_next("li")
                 entry += '\n'
