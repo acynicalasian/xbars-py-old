@@ -22,7 +22,7 @@ Searches for `word` on Wiktionary, scrapes the data if an English entry exists, 
 * If a page for `word` does not exist on Wiktionary, a `PageNotFound` exception is raised.
 * If a page for `word` exists, but an English entry for it does not exist, a `NoEnglishEntry` exception is raised.
 ##### `DictSearch.POSList`
-* `set` class attribute that holds the parts of speech recognized by the program. Any code implementing this library should ideally aim to conform to the list of parts of speech given in this class attribute.
+* `set` class attribute that holds the parts of speech relevant for forming syntax trees. If a word has a part of speech that does not belong to `DictSearch.POSList` but is included in `DictSearch._POSList`, `.entry` will include the definition, but this library does not intend to automatically generate phrase structure rules for `DictSearch` instances with an empty `.POS`.
 ##### `.word`
 * `str` instance variable that holds the `word` used to initialize this instance.
 ##### `.entry`
