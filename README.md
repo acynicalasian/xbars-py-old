@@ -39,6 +39,8 @@ Searches for `word` on Wiktionary, scrapes the data if an English entry exists, 
 * `str` instance variable that holds the root form of `.word` if it is a noun inflected for plurality and is `False` otherwise.
 ##### `.verbInflections` *=set()*
 * `set` instance variable that holds any verb inflections associated with `.word` in English and is an empty `set` if `.word` is not an inflected verb.
+  
+---
 
 ### `parser.py` - [WORK IN PROGRESS]
 Given a target configuration, aims to output potential parse trees for an input phrase/sentence.
