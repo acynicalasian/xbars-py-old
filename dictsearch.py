@@ -148,7 +148,7 @@ class DictSearch:
                         m_perf_regex = DictSearch._perf_regex.search(text)
                         m_pres_regex = DictSearch._pres_regex.search(text)
                         m_con_regex = DictSearch._con_regex.search(text)
-                        if m_aux_regex and self.word not in [ "modalize", "modalise" ] : # edge case
+                        if m_aux_regex and self.word not in [ "modalize", "modalise" ]: # edge case
                             self.isAux = True
                         if m_past_regex:
                             self.verbInflections.add("past")
@@ -182,7 +182,7 @@ class DictSearch:
                                 m_perf_regex = DictSearch._perf_regex.search(text)
                                 m_pres_regex = DictSearch._pres_regex.search(text)
                                 m_con_regex = DictSearch._con_regex.search(text)
-                                if m_aux_regex:
+                                if m_aux_regex and self.word not in [ "modalize", "modalise" ]:
                                     self.isAux = True
                                 if m_past_regex:
                                     self.verbInflections.add("past")
