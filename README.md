@@ -24,10 +24,18 @@ Searches for `word` on Wiktionary, scrapes the data if an English entry exists, 
 ##### `DictSearch.POSList`
 * `set` class attribute that holds the parts of speech relevant for forming syntax trees. If a word has a part of speech that does not belong to `DictSearch.POSList` but is included in `DictSearch._POSList`, `.entry` will include the definition, but this library does not intend to automatically generate phrase structure rules for `DictSearch` instances with an empty `.POS`.
 ##### `.word`
-* `str` instance variable that holds the `word` used to initialize this instance.
+* `str` instance variable that holds the word used to initialize this instance.
 ##### `.entry`
 * `str` instance variable that holds the dictionary entry on Wiktionary for the word.
 ##### `.POS`
-* `set` instance variable that holds the parts of speech associated with `word` in English.
-##### `.verbInflections`
-* `set` instance variable that holds any verb inflections associated with `word` in English.
+* `set` instance variable that holds the parts of speech associated with `.word` in English.
+##### `.isAux` *=False*
+* `bool` instance variable that is `True` if `.word` is an auxiliary/modal verb and is `False` otherwise.
+##### `.isPlural` *=False*
+* `bool` instance variable that is `True` if `.word` is a plural noun and is `False` otherwise.
+##### `.verbRoot` *=""*
+* `str` instance variable that holds the root form of `.word` if it is a verb inflected for tense/aspect and is `False` otherwise.
+##### `.nounRoot` *=""*
+* `str` instance variable that holds the root form of `.word` if it is a noun inflected for plurality and is `False` otherwise.
+##### `.verbInflections` *=set()*
+* `set` instance variable that holds any verb inflections associated with `.word` in English and is an empty `set` if `.word` is not an inflected verb.
