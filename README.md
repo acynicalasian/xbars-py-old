@@ -11,7 +11,7 @@ This project was tested and developed on Python 3.10.2. The following libraries 
 Unfortunately, I can't make any promises regarding which versions of Python 3.x this project targets.
 
 ## Modules
-### dictsearch.py - a basic Wiktionary scraper
+### `dictsearch.py` - a basic Wiktionary scraper
 Aims to provide an extremely basic interface to scrape English language dictionary entries from Wiktionary.
 
 The class constructor automatically does the scraping in the background, so the interface consists solely of the constructor and a few instance variables. As such, you'll want to make a new instance of the class when you want to search a new word, instead of modifying the instance variables.
@@ -39,3 +39,9 @@ Searches for `word` on Wiktionary, scrapes the data if an English entry exists, 
 * `str` instance variable that holds the root form of `.word` if it is a noun inflected for plurality and is `False` otherwise.
 ##### `.verbInflections` *=set()*
 * `set` instance variable that holds any verb inflections associated with `.word` in English and is an empty `set` if `.word` is not an inflected verb.
+
+### `parser.py` - [WORK IN PROGRESS]
+Given a target configuration, aims to output potential parse trees for an input phrase/sentence.
+
+#### Restrictions - [WORK IN PROGRESS]
+I'm wondering if it'll be possible to show raising/control structures if I have a list of words that trigger this behavior; until I manage to actually get the basic functionality working, I simply can't really say if this'll end up being the case or not.
