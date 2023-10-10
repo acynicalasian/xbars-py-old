@@ -7,8 +7,10 @@ Currently, there is one main module:
 ## Requirements
 This project was tested and developed on Python 3.10.2. The following libraries must be installed:
 * [Beautiful Soup 4](https://beautiful-soup-4.readthedocs.io/en/latest/) - used by the scraper in `dictsearch.py`
+* *(tentative)* [Natural Language Toolkit (NTLK)](https://www.nltk.org/install.html) - used by `psr.py` and `parser.py`.
 
 Unfortunately, I can't make any promises regarding which versions of Python 3.x this project targets.
+*(tentative):* I haven't tested thoroughly on Python 3.7, but it is the minimum Python version supported by NTLK.
 
 ## Modules
 ### `dictsearch.py` - a basic Wiktionary scraper
@@ -40,6 +42,13 @@ Searches for `word` on Wiktionary, scrapes the data if an English entry exists, 
 ##### `.verbInflections` *=set()*
 * `set` instance variable that holds any verb inflections associated with `.word` in English and is an empty `set` if `.word` is not an inflected verb.
   
+---
+
+### `psr.py` - [WORK IN PROGRESS]
+*(tentative):* Holds the phrase structure rules later imported by `parser.py`. This module expands the functionality offered by NTLK's implementation of context-free grammars in `nltk.grammar.CFG` to demonstrate phrasal and head movement.
+
+My implementation may be hacky, and from a (computational) linguistics perspective, there's a number of potential complaints about my implementation. For one, I violate the recursive spirit of Chomsky's generative syntax approach by defining multiple specialized phrase structure rules for, say, subject DPs/TPs/CP. Second of all, to the best of my knowledge, CFGs are unable to account for phrasal/head movement and subject/object control structures, so there may be fundamental concerns with using CFGs in the first place here. Unfortunately, due to the limits of my theoretical knowledge, this is a case of the ends taking precedence over the means.
+
 ---
 
 ### `parser.py` - [WORK IN PROGRESS]
